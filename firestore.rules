@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == "anitadhut12@gmail.com"
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidLoanRequest(data) {
+      return data.keys().hasAll(['name', 'email', 'phone', 'loanType', 'amount', 'status', 'createdAt']) &&
+        (data.keys().size() == 7 || (data.keys().size() == 8 && data.keys().hasAll(['adminNotes']))) &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 100 &&
+        data.phone is string && data.phone.size() >= 10 && data.phone.size() <= 20 &&
+        data.loanType in ['personal', 'business', 'home', 'education'] &&
+        data.amount is number && data.amount > 0 &&
+        data.status in ['pending', 'approved', 'rejected'] &&
+        (!data.keys().hasAll(['adminNotes']) || (data.adminNotes is string && data.adminNotes.size() <= 5000)) &&
+        data.createdAt == request.time;
+    }
+
+    function isValidContactSubmission(data) {
+      return data.keys().hasAll(['name', 'email', 'subject', 'message', 'createdAt']) &&
+        data.keys().size() == 5 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.email is string && data.email.size() <= 100 &&
+        data.subject is string && data.subject.size() > 0 && data.subject.size() <= 200 &&
+        data.message is string && data.message.size() > 0 && data.message.size() <= 2000 &&
+        data.createdAt == request.time;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Loan Requests
+    match /loan_requests/{requestId} {
+      allow create: if isValidLoanRequest(request.resource.data) && request.resource.data.status == 'pending';
+      allow read: if isAdmin() || (isSignedIn() && resource.data.email == request.auth.token.email);
+      allow update, delete: if isAdmin();
+    }
+
+    // Contact Submissions
+    match /contact_submissions/{submissionId} {
+      allow create: if isValidContactSubmission(request.resource.data);
+      allow read, delete: if isAdmin();
+    }
+
+    // Admin Users
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}

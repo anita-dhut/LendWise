@@ -1,0 +1,109 @@
+{
+  "entities": {
+    "LoanRequest": {
+      "title": "Loan Request",
+      "description": "A request for a loan submitted by a customer.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the applicant"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the applicant"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the applicant"
+        },
+        "loanType": {
+          "type": "string",
+          "enum": ["personal", "business", "home", "education"],
+          "description": "Type of loan requested"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of loan requested"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Current status of the request"
+        },
+        "adminNotes": {
+          "type": "string",
+          "description": "Internal notes added by admin"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of submission"
+        }
+      },
+      "required": ["name", "email", "phone", "loanType", "amount", "status", "createdAt"]
+    },
+    "ContactSubmission": {
+      "title": "Contact Submission",
+      "description": "A message submitted via the contact form.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the sender"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email of the sender"
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject of the message"
+        },
+        "message": {
+          "type": "string",
+          "description": "Message content"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of submission"
+        }
+      },
+      "required": ["name", "email", "subject", "message", "createdAt"]
+    },
+    "Admin": {
+      "title": "Admin User",
+      "description": "A user with administrative privileges.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email of the admin"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Role of the user"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "loan_requests/{requestId}": {
+      "schema": "LoanRequest",
+      "description": "Collection of all loan applications."
+    },
+    "contact_submissions/{submissionId}": {
+      "schema": "ContactSubmission",
+      "description": "Collection of contact form messages."
+    },
+    "admins/{adminId}": {
+      "schema": "Admin",
+      "description": "Collection of authorized admin users."
+    }
+  }
+}
